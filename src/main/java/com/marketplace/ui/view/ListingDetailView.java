@@ -73,6 +73,12 @@ public class ListingDetailView {
 
         content.getChildren().addAll(title, price, meta, new Separator(), description, specs);
 
+        Label ratingInfo = new Label(
+                "Seller Rating: " + String.format("%.1f", listing.getAverageRating()) + " / 5  (" + listing.getRatingCount() + " reviews)"
+        );
+        ratingInfo.getStyleClass().add("subtitle");
+        content.getChildren().add(ratingInfo);
+
         if (listing.getImageUrls() != null && !listing.getImageUrls().isEmpty()) {
             Label imagesTitle = new Label("Images:");
             VBox imagesBox = new VBox(8);
