@@ -100,7 +100,27 @@ public class AdminPanelView {
                 setGraphic(empty ? null : box);
             }
         });
-        table.getColumns().addAll(titleCol, sellerCol, actionCol);
+
+        TableColumn<ListingDto, Void> viewCol = new TableColumn<>("Ad Details");
+        viewCol.setPrefWidth(70);
+        viewCol.setCellFactory(col -> new TableCell<>(){
+            private final Button viewBtn = new Button("View");
+            {
+                viewBtn.getStyleClass().add("secondary-button");
+                viewBtn.setOnAction(e -> {
+                    ListingDto item = getTableView().getItems().get(getIndex());
+                    navigator.showListingDetail(item.getId());
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : viewBtn);
+            }
+        });
+
+        table.getColumns().addAll(titleCol, sellerCol, actionCol, viewCol);
         return table;
     }
 
