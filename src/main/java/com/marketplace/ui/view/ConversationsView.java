@@ -16,6 +16,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.control.ScrollPane;
+
 
 import java.util.List;
 
@@ -109,7 +111,11 @@ public class ConversationsView {
         VBox left = new VBox(8, new Label("Conversations"), conversationList, statusLabel);
         left.setPadding(new Insets(20, 0, 20, 20));
         left.setPrefWidth(320);
-        VBox right = new VBox(8, new Label("Chat"), messagesBox, messageInput, sendBtn);
+        ScrollPane scrollPane = new ScrollPane(messagesBox);
+        scrollPane.setFitToWidth(true);
+        scrollPane.vvalueProperty().bind(messagesBox.heightProperty());
+        VBox right = new VBox(8, new Label("Chat"), scrollPane, messageInput, sendBtn);
+        VBox.setVgrow(scrollPane, javafx.scene.layout.Priority.ALWAYS);
         right.setPadding(new Insets(20, 20, 20, 0));
         VBox.setVgrow(messagesBox, javafx.scene.layout.Priority.ALWAYS);
         center.getChildren().addAll(left, right);
