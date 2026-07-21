@@ -70,7 +70,10 @@ public class ListingsView {
         cityCol.setCellValueFactory(new PropertyValueFactory<>("cityName"));
         TableColumn<ListingDto, String> sellerCol = new TableColumn<>("Seller");
         sellerCol.setCellValueFactory(new PropertyValueFactory<>("sellerUsername"));
+        TableColumn<ListingDto, String> rateCol = new TableColumn<>("Seller Rate");
+        rateCol.setCellValueFactory(new PropertyValueFactory<>("averageRating"));
         TableColumn<ListingDto, Void> actionCol = new TableColumn<>("Action");
+        actionCol.setPrefWidth(70);
         actionCol.setCellFactory(col -> new TableCell<>() {
             private final Button viewBtn = new Button("View");
             {
@@ -87,7 +90,7 @@ public class ListingsView {
                 setGraphic(empty ? null : viewBtn);
             }
         });
-        table.getColumns().addAll(titleCol, priceCol, categoryCol, cityCol, sellerCol, actionCol);
+        table.getColumns().addAll(titleCol, priceCol, categoryCol, cityCol, sellerCol,rateCol , actionCol);
 
         Runnable loadListings = () -> UiTasks.runAsync(statusLabel, () -> {
             ListingSearchRequest search = new ListingSearchRequest();
