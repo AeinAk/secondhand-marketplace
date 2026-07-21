@@ -76,7 +76,6 @@ public class ListingDetailView {
         Label ratingInfo = new Label(
                 "Seller Rating: " + String.format("%.1f", listing.getAverageRating()) + " / 5  (" + listing.getRatingCount() + " reviews)"
         );
-        ratingInfo.getStyleClass().add("subtitle");
         content.getChildren().add(ratingInfo);
 
         if (listing.getImageUrls() != null && !listing.getImageUrls().isEmpty()) {
@@ -152,8 +151,8 @@ public class ListingDetailView {
                         ratingsTitle.getStyleClass().add("subtitle");
                         content.getChildren().add(ratingsTitle);
                         for (SellerRatingDto rating : ratings) {
-                            Label review = new Label(rating.getReviewerUsername() + " - " + rating.getRating() + "/5: "
-                                    + (rating.getReviewText() == null ? "" : rating.getReviewText()));
+                            Label review = new Label(rating.getReviewerUsername() + " - " + rating.getRating() + "/5"
+                                    + ((rating.getReviewText() == null || rating.getReviewText().equals("")) ? "" : (" : " + rating.getReviewText())));
                             review.setWrapText(true);
                             content.getChildren().add(review);
                         }
