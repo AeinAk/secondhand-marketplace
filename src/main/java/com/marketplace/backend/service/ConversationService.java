@@ -100,6 +100,10 @@ public class ConversationService {
         dto.setSellerId(conversation.getSeller().getId());
         dto.setSellerUsername(conversation.getSeller().getUsername());
         dto.setCreatedAt(conversation.getCreatedAt());
+        List<Message> messages = messageRepository.findByConversationIdOrderBySentAtAsc(conversation.getId());
+        if (!messages.isEmpty()) {
+            dto.setLastMessageTime(messages.get(messages.size() - 1).getSentAt());
+        }
         return dto;
     }
 

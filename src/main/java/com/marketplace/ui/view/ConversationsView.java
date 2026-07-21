@@ -47,7 +47,10 @@ public class ConversationsView {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(item.getListingTitle() + " (" + item.getBuyerUsername() + " ↔ " + item.getSellerUsername() + ")");
+                    String time = item.getLastMessageTime() != null
+                            ? item.getLastMessageTime().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                            : "";
+                    setText(item.getListingTitle() + " (" + item.getBuyerUsername() + " ↔ " + item.getSellerUsername() + ") - Last: " + time);
                 }
             }
         });
@@ -69,7 +72,12 @@ public class ConversationsView {
             UiTasks.runAsync(statusLabel, () -> apiClient.getConversation(selected.getId()), conversation -> {
                 messagesBox.getChildren().clear();
                 for (MessageDto message : conversation.getMessages()) {
-                    Label line = new Label(message.getSenderUsername() + ": " + message.getContent());
+                    String time = message.getSentAt() != null
+                            ? message.getSentAt().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                            : "";
+                    Label line = new Label(
+                            message.getSenderUsername() + " (" + time + "): " + message.getContent()
+                    );
                     line.setWrapText(true);
                     messagesBox.getChildren().add(line);
                 }
