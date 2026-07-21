@@ -2,6 +2,7 @@ package com.marketplace.backend.service;
 
 import com.marketplace.backend.dto.RatingRequest;
 import com.marketplace.backend.dto.SellerRatingDto;
+import com.marketplace.backend.dto.SellerRatingSummaryDto;
 import com.marketplace.backend.entity.Listing;
 import com.marketplace.backend.entity.SellerRating;
 import com.marketplace.backend.entity.User;
@@ -69,5 +70,14 @@ public class RatingService {
         dto.setReviewText(rating.getReviewText());
         dto.setCreatedAt(rating.getCreatedAt());
         return dto;
+    }
+
+    public SellerRatingSummaryDto getRatingSummary(Long sellerId) {
+        Double avg = sellerRatingRepository.findAverageRatingBySellerId(sellerId);
+        Long count = sellerRatingRepository.countRatingsBySellerId(sellerId);
+        return new SellerRatingSummaryDto(
+                avg != null ? avg : 0.0,
+                count != null ? count : 0L
+        );
     }
 }
