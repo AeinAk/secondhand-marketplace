@@ -6,6 +6,7 @@ import java.util.List;
 
 public class ConversationDto {
 
+    private LocalDateTime lastMessageTime;
     private Long id;
     private Long listingId;
     private String listingTitle;
@@ -18,6 +19,14 @@ public class ConversationDto {
 
     public Long getId() {
         return id;
+    }
+
+    public LocalDateTime getLastMessageTime() {
+        return lastMessageTime;
+    }
+
+    public void setLastMessageTime(LocalDateTime lastMessageTime) {
+        this.lastMessageTime = lastMessageTime;
     }
 
     public void setId(Long id) {
