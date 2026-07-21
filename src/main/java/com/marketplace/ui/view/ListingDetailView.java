@@ -123,9 +123,16 @@ public class ListingDetailView {
                     request.setListingId(listing.getId());
                     request.setRating(ratingSpinner.getValue());
                     request.setReviewText(reviewArea.getText().trim());
-                    UiTasks.runAsync(statusLabel, () -> apiClient.rateSeller(request), rating ->
-                                    UiTasks.showInfo("Thanks", "Your rating was submitted"),
-                            ex -> statusLabel.setText(apiClient.extractErrorMessage(ex)));
+                    UiTasks.runAsync(statusLabel, () -> {
+                        apiClient.rateSeller(request);
+                        return apiClient.getListing(listing.getId());
+                    }, (ListingDto updatedListing) -> {
+                        UiTasks.showInfo("Thanks", "Your rating was submitted");
+                        renderListing(content, statusLabel, updatedListing);
+                    }, ex -> {
+                        statusLabel.setText(apiClient.extractErrorMessage(ex));
+                        ex.printStackTrace();
+                    });
                 });
                 actions.getChildren().addAll(new Label("Rating:"), ratingSpinner, reviewArea, rateBtn);
             }
