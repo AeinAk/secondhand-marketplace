@@ -3,6 +3,7 @@ package com.marketplace.backend.service;
 import com.marketplace.backend.dto.AdminReviewRequest;
 import com.marketplace.backend.dto.ListingDto;
 import com.marketplace.backend.dto.ListingSearchRequest;
+import com.marketplace.backend.dto.SellerRatingSummaryDto;
 import com.marketplace.backend.entity.AdminReview;
 import com.marketplace.backend.entity.Category;
 import com.marketplace.backend.entity.City;
@@ -35,6 +36,8 @@ public class ListingService {
     private final AdminReviewRepository adminReviewRepository;
     private final FileStorageService fileStorageService;
 
+    private final RatingService ratingService;
+
     public ListingService(ListingRepository listingRepository,
                           ListingImageRepository listingImageRepository,
                           CategoryService categoryService,
@@ -42,7 +45,8 @@ public class ListingService {
                           UserService userService,
                           FavoriteRepository favoriteRepository,
                           AdminReviewRepository adminReviewRepository,
-                          FileStorageService fileStorageService) {
+                          FileStorageService fileStorageService,
+                          RatingService ratingService) {
         this.listingRepository = listingRepository;
         this.listingImageRepository = listingImageRepository;
         this.categoryService = categoryService;
@@ -51,6 +55,7 @@ public class ListingService {
         this.favoriteRepository = favoriteRepository;
         this.adminReviewRepository = adminReviewRepository;
         this.fileStorageService = fileStorageService;
+        this.ratingService = ratingService;
     }
 
     public List<ListingDto> getActiveListings(ListingSearchRequest search) {
@@ -224,6 +229,11 @@ public class ListingService {
         dto.setCreatedAt(listing.getCreatedAt());
         dto.setUpdatedAt(listing.getUpdatedAt());
 
+        SellerRatingSummaryDto summary = ratingService.getRatingSummary(listing.getSeller().getId());
+        dto.setAverageRating(summary.getAverage());
+        dto.setRatingCount(summary.getCount());
+
+
         List<String> urls = new ArrayList<>();
         for (ListingImage image : listingImageRepository.findByListingIdOrderBySortOrderAsc(listing.getId())) {
             urls.add(fileStorageService.toPublicUrl(image.getFilePath()));
@@ -233,6 +243,8 @@ public class ListingService {
         if (currentUserId != null) {
             dto.setFavorite(favoriteRepository.existsByUserIdAndListingId(currentUserId, listing.getId()));
         }
+
+
         return dto;
     }
 }
