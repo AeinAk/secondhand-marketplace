@@ -42,7 +42,7 @@ public class MyListingsView {
         TableColumn<ListingDto, String> statusCol = new TableColumn<>("Status");
         statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
         TableColumn<ListingDto, Void> actionsCol = new TableColumn<>("Actions");
-        actionsCol.setPrefWidth(250);
+        actionsCol.setPrefWidth(225);
         actionsCol.setCellFactory(col -> new TableCell<>() {
             private final Button editBtn = new Button("Edit");
             private final Button soldBtn = new Button("Mark Sold");

@@ -142,7 +142,7 @@ public class ListingDetailView {
         UiTasks.runAsync(null, () -> apiClient.getSellerRatings(listing.getSellerId()),
                 (List<SellerRatingDto> ratings) -> {
                     if (!ratings.isEmpty()) {
-                        Label ratingsTitle = new Label("Seller Reviews");
+                        Label ratingsTitle = new Label("Reviews");
                         ratingsTitle.getStyleClass().add("subtitle");
                         content.getChildren().add(ratingsTitle);
                         for (SellerRatingDto rating : ratings) {
