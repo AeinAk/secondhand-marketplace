@@ -25,18 +25,45 @@ import javafx.scene.layout.VBox;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * View that displays all active listings with search and filter capabilities.
+ * Provides a table of listings with columns for title, price, category, city,
+ * seller, and average seller rating. Users can filter by keyword, price range,
+ * specifications, category, and city, and navigate to individual listing details.
+ */
 public class ListingsView {
 
+    /** The scene navigator for switching views. */
     private final SceneNavigator navigator;
+
+    /** The API client for fetching listings and search data. */
     private final ApiClient apiClient;
+
+    /** The current user session. */
     private final UserSession session;
 
+    /**
+     * Constructs a ListingsView with the required dependencies.
+     *
+     * @param navigator the scene navigator
+     * @param apiClient the API client
+     * @param session   the user session
+     */
     public ListingsView(SceneNavigator navigator, ApiClient apiClient, UserSession session) {
         this.navigator = navigator;
         this.apiClient = apiClient;
         this.session = session;
     }
 
+    /**
+     * Builds and returns the main UI for the listings view.
+     * Includes a filter bar with keyword, price range, specifications,
+     * category and city selectors, a search button, a reset button,
+     * and a table displaying the matching listings. The table includes
+     * a "View" button for each listing to navigate to the detail view.
+     *
+     * @return the root BorderPane containing the complete listings interface
+     */
     public BorderPane build() {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");
@@ -93,26 +120,26 @@ public class ListingsView {
         table.getColumns().addAll(titleCol, priceCol, categoryCol, cityCol, sellerCol,rateCol , actionCol);
 
         Runnable loadListings = () -> UiTasks.runAsync(statusLabel, () -> {
-            ListingSearchRequest search = new ListingSearchRequest();
-            search.setKeyword(keywordField.getText().trim());
-            search.setSpecifications(specsField.getText().trim());
-            if (!minPriceField.getText().isBlank()) {
-                search.setMinPrice(new BigDecimal(minPriceField.getText().trim()));
-            }
-            if (!maxPriceField.getText().isBlank()) {
-                search.setMaxPrice(new BigDecimal(maxPriceField.getText().trim()));
-            }
-            if (categoryBox.getValue() != null) {
-                search.setCategoryId(categoryBox.getValue().getId());
-            }
-            if (cityBox.getValue() != null) {
-                search.setCityId(cityBox.getValue().getId());
-            }
-            boolean hasFilters = !keywordField.getText().isBlank() || !specsField.getText().isBlank()
-                    || !minPriceField.getText().isBlank() || !maxPriceField.getText().isBlank()
-                    || categoryBox.getValue() != null || cityBox.getValue() != null;
-            return hasFilters ? apiClient.searchListings(search) : apiClient.getActiveListings();
-        }, listings -> table.setItems(FXCollections.observableArrayList(listings)),
+                    ListingSearchRequest search = new ListingSearchRequest();
+                    search.setKeyword(keywordField.getText().trim());
+                    search.setSpecifications(specsField.getText().trim());
+                    if (!minPriceField.getText().isBlank()) {
+                        search.setMinPrice(new BigDecimal(minPriceField.getText().trim()));
+                    }
+                    if (!maxPriceField.getText().isBlank()) {
+                        search.setMaxPrice(new BigDecimal(maxPriceField.getText().trim()));
+                    }
+                    if (categoryBox.getValue() != null) {
+                        search.setCategoryId(categoryBox.getValue().getId());
+                    }
+                    if (cityBox.getValue() != null) {
+                        search.setCityId(cityBox.getValue().getId());
+                    }
+                    boolean hasFilters = !keywordField.getText().isBlank() || !specsField.getText().isBlank()
+                            || !minPriceField.getText().isBlank() || !maxPriceField.getText().isBlank()
+                            || categoryBox.getValue() != null || cityBox.getValue() != null;
+                    return hasFilters ? apiClient.searchListings(search) : apiClient.getActiveListings();
+                }, listings -> table.setItems(FXCollections.observableArrayList(listings)),
                 ex -> statusLabel.setText(apiClient.extractErrorMessage(ex)));
 
         Button searchBtn = new Button("Search");

@@ -25,13 +25,34 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * View for creating a new listing or editing an existing one.
+ * Displays a form with fields for title, description, price, specifications,
+ * category, city, and image selection. Submits the data to the backend for
+ * creation or update, and navigates to the user's listings upon success.
+ */
 public class CreateListingView {
 
+    /** The scene navigator used to switch views after successful save. */
     private final SceneNavigator navigator;
+
+    /** The API client for backend communication. */
     private final ApiClient apiClient;
+
+    /** The current user session. */
     private final UserSession session;
+
+    /** The existing listing to edit, or null if creating a new listing. */
     private final ListingDto existing;
 
+    /**
+     * Constructs a CreateListingView.
+     *
+     * @param navigator the scene navigator
+     * @param apiClient the API client
+     * @param session   the user session
+     * @param existing  the listing to edit, or null to create a new one
+     */
     public CreateListingView(SceneNavigator navigator, ApiClient apiClient, UserSession session, ListingDto existing) {
         this.navigator = navigator;
         this.apiClient = apiClient;
@@ -39,6 +60,14 @@ public class CreateListingView {
         this.existing = existing;
     }
 
+    /**
+     * Builds and returns the main UI for the create/edit listing form.
+     * If the user is not logged in, displays a message asking to log in.
+     * Otherwise, renders the form with fields populated from the existing
+     * listing (if editing). Handles image selection and submission.
+     *
+     * @return the root BorderPane containing the form or login message
+     */
     public BorderPane build() {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");

@@ -11,11 +11,29 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 
+/**
+ * Utility class that builds the application toolbar (top navigation bar).
+ * The toolbar displays the current view title, user information, and action buttons
+ * based on the user's authentication state and role (e.g., Browse, New Ad, My Ads,
+ * Favorites, Messages, Admin Panel, Login/Logout).
+ */
 public class AppToolbar {
 
+    /** Private constructor to prevent instantiation of this utility class. */
     private AppToolbar() {
     }
 
+    /**
+     * Creates and returns the toolbar HBox with all navigation and action buttons.
+     * The toolbar dynamically adapts to the user's login status and administrative
+     * privileges.
+     *
+     * @param navigator   the scene navigator for view switching
+     * @param apiClient   the API client (currently unused in this method but retained for consistency)
+     * @param session     the current user session to determine logged-in state and role
+     * @param titleText   the title text to display on the left side of the toolbar
+     * @return an HBox containing the complete toolbar UI
+     */
     public static HBox create(SceneNavigator navigator, ApiClient apiClient, UserSession session, String titleText) {
         Label title = new Label(titleText);
         title.getStyleClass().add("app-title");

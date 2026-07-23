@@ -21,13 +21,34 @@ import javafx.scene.control.ScrollPane;
 
 import java.util.List;
 
+/**
+ * View that displays the user's conversations (messages) with other users.
+ * It shows a list of conversations on the left and the selected conversation's
+ * messages on the right, along with an input area for sending new messages.
+ */
 public class ConversationsView {
 
+    /** The scene navigator used to switch views. */
     private final SceneNavigator navigator;
+
+    /** The API client for backend communication. */
     private final ApiClient apiClient;
+
+    /** The current user session. */
     private final UserSession session;
+
+    /** The ID of a specific conversation to select and display on load, or null. */
     private final Long selectedConversationId;
 
+    /**
+     * Constructs a ConversationsView.
+     *
+     * @param navigator             the scene navigator
+     * @param apiClient             the API client
+     * @param session               the user session
+     * @param selectedConversationId the ID of the conversation to pre-select,
+     *                               or null to show the list without selection
+     */
     public ConversationsView(SceneNavigator navigator, ApiClient apiClient, UserSession session, Long selectedConversationId) {
         this.navigator = navigator;
         this.apiClient = apiClient;
@@ -35,6 +56,14 @@ public class ConversationsView {
         this.selectedConversationId = selectedConversationId;
     }
 
+    /**
+     * Builds and returns the main UI for the conversations view.
+     * The layout consists of a left panel with a list of conversations and a right
+     * panel showing the messages of the selected conversation, with a text area
+     * and send button for replying.
+     *
+     * @return the root BorderPane containing the entire conversations interface
+     */
     public BorderPane build() {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");

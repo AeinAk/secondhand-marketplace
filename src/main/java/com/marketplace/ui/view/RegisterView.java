@@ -15,18 +15,44 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
+/**
+ * View that displays the registration screen for new users.
+ * Provides input fields for username, email, full name, phone number,
+ * and password, along with a registration button and a link to return
+ * to the login screen. Upon successful registration, the user is
+ * automatically logged in and redirected to the listings view.
+ */
 public class RegisterView {
 
+    /** The scene navigator used to switch views after registration. */
     private final SceneNavigator navigator;
+
+    /** The API client for sending registration requests. */
     private final ApiClient apiClient;
+
+    /** The user session that will store authentication data upon successful registration. */
     private final UserSession session;
 
+    /**
+     * Constructs a RegisterView with the required dependencies.
+     *
+     * @param navigator the scene navigator
+     * @param apiClient the API client
+     * @param session   the user session
+     */
     public RegisterView(SceneNavigator navigator, ApiClient apiClient, UserSession session) {
         this.navigator = navigator;
         this.apiClient = apiClient;
         this.session = session;
     }
 
+    /**
+     * Builds and returns the main UI for the registration view.
+     * The view consists of a centered card with fields for user details,
+     * a register button, and a link to navigate back to the login screen.
+     *
+     * @return the root BorderPane containing the registration interface
+     */
     public BorderPane build() {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");

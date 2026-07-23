@@ -17,18 +17,44 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+/**
+ * View that displays the current user's own listings.
+ * Shows a table with title, status, and action buttons for each listing:
+ * Edit, Mark as Sold, and Delete. Fetches data from the API upon loading
+ * and refreshes after each operation.
+ */
 public class MyListingsView {
 
+    /** The scene navigator for switching views. */
     private final SceneNavigator navigator;
+
+    /** The API client for fetching and modifying the user's listings. */
     private final ApiClient apiClient;
+
+    /** The current user session. */
     private final UserSession session;
 
+    /**
+     * Constructs a MyListingsView with the required dependencies.
+     *
+     * @param navigator the scene navigator
+     * @param apiClient the API client
+     * @param session   the user session
+     */
     public MyListingsView(SceneNavigator navigator, ApiClient apiClient, UserSession session) {
         this.navigator = navigator;
         this.apiClient = apiClient;
         this.session = session;
     }
 
+    /**
+     * Builds and returns the main UI for the "My Listings" view.
+     * The view includes a toolbar, a table displaying the user's listings,
+     * and a status label for operation feedback. Each row includes Edit,
+     * Mark Sold, and Delete buttons.
+     *
+     * @return the root BorderPane containing the interface
+     */
     public BorderPane build() {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");
@@ -65,9 +91,9 @@ public class MyListingsView {
                 deleteBtn.setOnAction(e -> {
                     ListingDto item = getTableView().getItems().get(getIndex());
                     UiTasks.runAsync(statusLabel, () -> {
-                        apiClient.deleteListing(item.getId());
-                        return apiClient.getMyListings();
-                    }, listings -> table.setItems(FXCollections.observableArrayList(listings)),
+                                apiClient.deleteListing(item.getId());
+                                return apiClient.getMyListings();
+                            }, listings -> table.setItems(FXCollections.observableArrayList(listings)),
                             ex -> statusLabel.setText(apiClient.extractErrorMessage(ex)));
                 });
             }
@@ -89,6 +115,12 @@ public class MyListingsView {
         return root;
     }
 
+    /**
+     * Loads the user's listings asynchronously and populates the table.
+     *
+     * @param table        the TableView to update
+     * @param statusLabel  the label for displaying loading/error messages
+     */
     private void load(TableView<ListingDto> table, Label statusLabel) {
         UiTasks.runAsync(statusLabel, apiClient::getMyListings,
                 listings -> table.setItems(FXCollections.observableArrayList(listings)),

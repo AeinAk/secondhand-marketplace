@@ -24,18 +24,42 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+/**
+ * The administration panel view for managing pending listings, users, and categories.
+ * This view is accessible only to users with the ADMIN role and provides
+ * administrative operations such as approving/rejecting listings, blocking/unblocking users,
+ * and creating/deleting categories.
+ */
 public class AdminPanelView {
 
+    /** The scene navigator for switching views. */
     private final SceneNavigator navigator;
+
+    /** The API client for backend communication. */
     private final ApiClient apiClient;
+
+    /** The current user session used to verify admin privileges. */
     private final UserSession session;
 
+    /**
+     * Constructs an AdminPanelView with the required dependencies.
+     *
+     * @param navigator the scene navigator
+     * @param apiClient the API client
+     * @param session   the user session
+     */
     public AdminPanelView(SceneNavigator navigator, ApiClient apiClient, UserSession session) {
         this.navigator = navigator;
         this.apiClient = apiClient;
         this.session = session;
     }
 
+    /**
+     * Builds the complete admin panel UI containing three tabs:
+     * pending advertisements, user management, and category management.
+     *
+     * @return the root BorderPane containing the admin interface
+     */
     public BorderPane build() {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");
@@ -67,6 +91,13 @@ public class AdminPanelView {
         return root;
     }
 
+    /**
+     * Builds and configures the table that displays pending listings awaiting admin review.
+     * Each row includes buttons to approve, reject, or delete the listing.
+     *
+     * @param statusLabel the label used to display operation status messages
+     * @return the configured TableView for pending listings
+     */
     private TableView<ListingDto> buildPendingTable(Label statusLabel) {
         TableView<ListingDto> table = new TableView<>();
         TableColumn<ListingDto, String> titleCol = new TableColumn<>("Title");
@@ -88,9 +119,9 @@ public class AdminPanelView {
                 approveBtn.setOnAction(e -> review(getTableView().getItems().get(getIndex()), ReviewDecision.APPROVED, table, statusLabel));
                 rejectBtn.setOnAction(e -> review(getTableView().getItems().get(getIndex()), ReviewDecision.REJECTED, table, statusLabel));
                 deleteBtn.setOnAction(e -> UiTasks.runAsync(statusLabel, () -> {
-                    apiClient.deleteListing(getTableView().getItems().get(getIndex()).getId());
-                    return apiClient.getPendingListings();
-                }, listings -> table.setItems(FXCollections.observableArrayList(listings)),
+                            apiClient.deleteListing(getTableView().getItems().get(getIndex()).getId());
+                            return apiClient.getPendingListings();
+                        }, listings -> table.setItems(FXCollections.observableArrayList(listings)),
                         ex -> statusLabel.setText(apiClient.extractErrorMessage(ex))));
             }
 
@@ -124,17 +155,33 @@ public class AdminPanelView {
         return table;
     }
 
+    /**
+     * Performs a review action on a pending listing (approve or reject).
+     * After the review, the pending list is refreshed.
+     *
+     * @param listing      the listing to review
+     * @param decision     the review decision (approved or rejected)
+     * @param table        the table containing the pending listings
+     * @param statusLabel  the label for status messages
+     */
     private void review(ListingDto listing, ReviewDecision decision, TableView<ListingDto> table, Label statusLabel) {
         AdminReviewRequest request = new AdminReviewRequest();
         request.setDecision(decision);
         request.setComment(decision == ReviewDecision.APPROVED ? "Approved by admin" : "Rejected by admin");
         UiTasks.runAsync(statusLabel, () -> {
-            apiClient.reviewListing(listing.getId(), request);
-            return apiClient.getPendingListings();
-        }, listings -> table.setItems(FXCollections.observableArrayList(listings)),
+                    apiClient.reviewListing(listing.getId(), request);
+                    return apiClient.getPendingListings();
+                }, listings -> table.setItems(FXCollections.observableArrayList(listings)),
                 ex -> statusLabel.setText(apiClient.extractErrorMessage(ex)));
     }
 
+    /**
+     * Builds and configures the table that displays all registered users.
+     * Each row includes a button to block or unblock the user.
+     *
+     * @param statusLabel the label used to display operation status messages
+     * @return the configured TableView for users
+     */
     private TableView<UserDto> buildUsersTable(Label statusLabel) {
         TableView<UserDto> table = new TableView<>();
         TableColumn<UserDto, String> usernameCol = new TableColumn<>("Username");
@@ -166,6 +213,13 @@ public class AdminPanelView {
         return table;
     }
 
+    /**
+     * Builds the category management panel with input fields for name and description,
+     * and a button to add a new category.
+     *
+     * @param statusLabel the label used to display operation status messages
+     * @return a VBox containing the category management controls
+     */
     private VBox buildCategoriesPanel(Label statusLabel) {
         TextField nameField = new TextField();
         nameField.setPromptText("Category name");
@@ -182,12 +236,24 @@ public class AdminPanelView {
         return new VBox(10, new Label("Manage Categories"), nameField, descField, addBtn);
     }
 
+    /**
+     * Reloads the pending listings table by fetching fresh data from the API.
+     *
+     * @param table        the pending listings table to update
+     * @param statusLabel  the label for status messages
+     */
     private void reloadPending(TableView<ListingDto> table, Label statusLabel) {
         UiTasks.runAsync(statusLabel, apiClient::getPendingListings,
                 listings -> table.setItems(FXCollections.observableArrayList(listings)),
                 ex -> statusLabel.setText(apiClient.extractErrorMessage(ex)));
     }
 
+    /**
+     * Reloads the users table by fetching fresh user data from the API.
+     *
+     * @param table        the users table to update
+     * @param statusLabel  the label for status messages
+     */
     private void reloadUsers(TableView<UserDto> table, Label statusLabel) {
         UiTasks.runAsync(statusLabel, apiClient::getUsers,
                 users -> table.setItems(FXCollections.observableArrayList(users)),

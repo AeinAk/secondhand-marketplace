@@ -24,13 +24,34 @@ import java.awt.*;
 
 import java.util.List;
 
+/**
+ * View that displays detailed information about a single listing.
+ * Shows title, price, description, specifications, seller rating, images,
+ * and provides actions such as adding/removing from favorites, messaging the seller,
+ * and submitting a rating for the seller.
+ */
 public class ListingDetailView {
 
+    /** The scene navigator used to switch views. */
     private final SceneNavigator navigator;
+
+    /** The API client for fetching listing data and performing actions. */
     private final ApiClient apiClient;
+
+    /** The current user session. */
     private final UserSession session;
+
+    /** The ID of the listing to display. */
     private final Long listingId;
 
+    /**
+     * Constructs a ListingDetailView.
+     *
+     * @param navigator the scene navigator
+     * @param apiClient the API client
+     * @param session   the user session
+     * @param listingId the ID of the listing to show
+     */
     public ListingDetailView(SceneNavigator navigator, ApiClient apiClient, UserSession session, Long listingId) {
         this.navigator = navigator;
         this.apiClient = apiClient;
@@ -38,6 +59,12 @@ public class ListingDetailView {
         this.listingId = listingId;
     }
 
+    /**
+     * Builds and returns the main UI for the listing detail view.
+     * Loads the listing data asynchronously and renders it.
+     *
+     * @return the root BorderPane containing the detail interface
+     */
     public BorderPane build() {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");
@@ -52,12 +79,21 @@ public class ListingDetailView {
         root.setCenter(scrollPane);
 
         UiTasks.runAsync(statusLabel, () -> apiClient.getListing(listingId), listing ->
-                renderListing(content, statusLabel, listing),
+                        renderListing(content, statusLabel, listing),
                 ex -> statusLabel.setText(apiClient.extractErrorMessage(ex)));
 
         return root;
     }
 
+    /**
+     * Renders the listing data into the provided content container.
+     * Displays all listing details, images, seller rating, and action buttons
+     * based on the user's authentication status and relationship to the listing.
+     *
+     * @param content     the VBox container to populate with UI elements
+     * @param statusLabel the label used to display status messages
+     * @param listing     the listing data to render
+     */
     private void renderListing(VBox content, Label statusLabel, ListingDto listing) {
         content.getChildren().clear();
 
@@ -99,13 +135,13 @@ public class ListingDetailView {
             Button favoriteBtn = new Button(listing.isFavorite() ? "Remove Favorite" : "Add Favorite");
             favoriteBtn.getStyleClass().add("secondary-button");
             favoriteBtn.setOnAction(e -> UiTasks.runAsync(statusLabel, () -> {
-                if (listing.isFavorite()) {
-                    apiClient.removeFavorite(listing.getId());
-                } else {
-                    apiClient.addFavorite(listing.getId());
-                }
-                return apiClient.getListing(listing.getId());
-            }, refreshed -> renderListing(content, statusLabel, refreshed),
+                        if (listing.isFavorite()) {
+                            apiClient.removeFavorite(listing.getId());
+                        } else {
+                            apiClient.addFavorite(listing.getId());
+                        }
+                        return apiClient.getListing(listing.getId());
+                    }, refreshed -> renderListing(content, statusLabel, refreshed),
                     ex -> statusLabel.setText(apiClient.extractErrorMessage(ex))));
             actions.getChildren().add(favoriteBtn);
 
