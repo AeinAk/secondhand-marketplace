@@ -150,8 +150,34 @@ public class DataInitializer implements CommandLineRunner {
         createCityIfMissing("Tehran", "Tehran");
         createCityIfMissing("Isfahan", "Isfahan");
         createCityIfMissing("Shiraz", "Fars");
-        createCityIfMissing("Tabriz", "East Azerbaijan");
         createCityIfMissing("Mashhad", "Razavi Khorasan");
+        createCityIfMissing("Tabriz", "East Azerbaijan");
+        createCityIfMissing("Karaj", "Alborz");
+        createCityIfMissing("Ahvaz", "Khuzestan");
+        createCityIfMissing("Rasht", "Gilan");
+        createCityIfMissing("Kerman", "Kerman");
+        createCityIfMissing("Yazd", "Yazd");
+        createCityIfMissing("Ardabil", "Ardabil");
+        createCityIfMissing("Urmia", "West Azerbaijan");
+        createCityIfMissing("Ilam", "Ilam");
+        createCityIfMissing("Bushehr", "Bushehr");
+        createCityIfMissing("Shahr-e Kord", "Chaharmahal and Bakhtiari");
+        createCityIfMissing("Birjand", "South Khorasan");
+        createCityIfMissing("Bojnord", "North Khorasan");
+        createCityIfMissing("Zahedan", "Sistan and Baluchestan");
+        createCityIfMissing("Qazvin", "Qazvin");
+        createCityIfMissing("Qom", "Qom");
+        createCityIfMissing("Sanandaj", "Kurdistan");
+        createCityIfMissing("Kermanshah", "Kermanshah");
+        createCityIfMissing("Yasuj", "Kohgiluyeh and Boyer-Ahmad");
+        createCityIfMissing("Gorgan", "Golestan");
+        createCityIfMissing("Khorramabad", "Lorestan");
+        createCityIfMissing("Sari", "Mazandaran");
+        createCityIfMissing("Arak", "Markazi");
+        createCityIfMissing("Bandar Abbas", "Hormozgan");
+        createCityIfMissing("Hamedan", "Hamedan");
+        createCityIfMissing("Zanjan", "Zanjan");
+        createCityIfMissing("Semnan", "Semnan");
     }
 
     /**
