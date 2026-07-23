@@ -11,42 +11,38 @@ import com.marketplace.ui.session.UserSession;
 import com.marketplace.ui.util.UiTasks;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.util.List;
+
 /**
- * The administration panel view for managing pending listings, users, and categories.
- * This view is accessible only to users with the ADMIN role and provides
- * administrative operations such as approving/rejecting listings, blocking/unblocking users,
- * and creating/deleting categories.
+ * Administrative panel view for managing listings, users, and categories.
+ * <p>
+ * This view is only accessible to users with the ADMIN role. It provides three
+ * tabs for managing pending listings, user accounts, and product categories.
+ * Administrators can review listings, block/unblock users, and create or delete
+ * categories.
+ * </p>
+ *
+ * @version 1.0
+ * @since 1.0
  */
 public class AdminPanelView {
 
-    /** The scene navigator for switching views. */
     private final SceneNavigator navigator;
-
-    /** The API client for backend communication. */
     private final ApiClient apiClient;
-
-    /** The current user session used to verify admin privileges. */
     private final UserSession session;
 
     /**
      * Constructs an AdminPanelView with the required dependencies.
      *
-     * @param navigator the scene navigator
-     * @param apiClient the API client
-     * @param session   the user session
+     * @param navigator the scene navigator for switching views
+     * @param apiClient the API client for backend communication
+     * @param session   the user session for authentication state
      */
     public AdminPanelView(SceneNavigator navigator, ApiClient apiClient, UserSession session) {
         this.navigator = navigator;
@@ -55,10 +51,9 @@ public class AdminPanelView {
     }
 
     /**
-     * Builds the complete admin panel UI containing three tabs:
-     * pending advertisements, user management, and category management.
+     * Builds and returns the admin panel view.
      *
-     * @return the root BorderPane containing the admin interface
+     * @return the constructed BorderPane containing the admin panel
      */
     public BorderPane build() {
         BorderPane root = new BorderPane();
@@ -74,11 +69,12 @@ public class AdminPanelView {
         TabPane tabs = new TabPane();
 
         TableView<ListingDto> pendingTable = buildPendingTable(statusLabel);
-        TableView<UserDto> usersTable = buildUsersTable(statusLabel);
-        VBox categoriesBox = buildCategoriesPanel(statusLabel);
+        tabs.getTabs().add(new Tab("Pending Listings", pendingTable));
 
-        tabs.getTabs().add(new Tab("Pending Advertisements", pendingTable));
-        tabs.getTabs().add(new Tab("Users Info", usersTable));
+        TableView<UserDto> usersTable = buildUsersTable(statusLabel);
+        tabs.getTabs().add(new Tab("Users", usersTable));
+
+        VBox categoriesBox = buildCategoriesPanel(statusLabel);
         tabs.getTabs().add(new Tab("Categories", categoriesBox));
 
         VBox center = new VBox(10, tabs, statusLabel);
@@ -88,24 +84,154 @@ public class AdminPanelView {
 
         reloadPending(pendingTable, statusLabel);
         reloadUsers(usersTable, statusLabel);
+
         return root;
     }
 
     /**
-     * Builds and configures the table that displays pending listings awaiting admin review.
-     * Each row includes buttons to approve, reject, or delete the listing.
+     * Builds the categories panel with a list view and an add form.
      *
-     * @param statusLabel the label used to display operation status messages
-     * @return the configured TableView for pending listings
+     * @param statusLabel the label for displaying status messages
+     * @return a VBox containing the categories management components
+     */
+    private VBox buildCategoriesPanel(Label statusLabel) {
+        VBox panel = new VBox(15);
+        panel.setPadding(new Insets(10));
+
+        Label formTitle = new Label("Add New Category");
+        formTitle.getStyleClass().add("subtitle");
+
+        TextField nameField = new TextField();
+        nameField.setPromptText("Category name");
+
+        TextField descField = new TextField();
+        descField.setPromptText("Description");
+
+        Button addBtn = new Button("Add Category");
+        addBtn.getStyleClass().add("primary-button");
+        addBtn.setOnAction(e -> {
+            String name = nameField.getText().trim();
+            String desc = descField.getText().trim();
+            if (name.isEmpty()) {
+                statusLabel.setText("Category name is required");
+                return;
+            }
+            UiTasks.runAsync(statusLabel, () -> apiClient.createCategory(name, desc),
+                    created -> {
+                        nameField.clear();
+                        descField.clear();
+                        UiTasks.showInfo("Success", "Category created");
+                        TableView<CategoryDto> table = findCategoryTable(panel);
+                        if (table != null) {
+                            reloadCategories(table, statusLabel);
+                        }
+                    },
+                    ex -> statusLabel.setText(apiClient.extractErrorMessage(ex)));
+        });
+
+        HBox formBox = new HBox(10, nameField, descField, addBtn);
+        formBox.setPadding(new Insets(5, 0, 15, 0));
+
+        Label listTitle = new Label("All Categories");
+        listTitle.getStyleClass().add("subtitle");
+
+        TableView<CategoryDto> categoryTable = new TableView<>();
+
+        TableColumn<CategoryDto, Long> idCol = new TableColumn<>("ID");
+        idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
+        idCol.setPrefWidth(50);
+
+        TableColumn<CategoryDto, String> nameCol = new TableColumn<>("Name");
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+        nameCol.setPrefWidth(200);
+
+        TableColumn<CategoryDto, String> descCol = new TableColumn<>("Description");
+        descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
+        descCol.setPrefWidth(300);
+
+        TableColumn<CategoryDto, Void> actionCol = new TableColumn<>("Action");
+        actionCol.setPrefWidth(80);
+        actionCol.setCellFactory(col -> new TableCell<>() {
+            private final Button deleteBtn = new Button("Delete");
+
+            {
+                deleteBtn.getStyleClass().add("danger-button");
+                deleteBtn.setOnAction(e -> {
+                    CategoryDto category = getTableView().getItems().get(getIndex());
+                    UiTasks.runAsync(statusLabel, () -> {
+                        apiClient.deleteCategory(category.getId());
+                        return apiClient.getCategories();
+                    }, (List<CategoryDto> updatedList) -> {
+                        getTableView().setItems(FXCollections.observableArrayList(updatedList));
+                        UiTasks.showInfo("Success", "Category deleted");
+                    }, ex -> statusLabel.setText(apiClient.extractErrorMessage(ex)));
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : deleteBtn);
+            }
+        });
+
+        categoryTable.getColumns().addAll(idCol, nameCol, descCol, actionCol);
+        categoryTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        VBox.setVgrow(categoryTable, javafx.scene.layout.Priority.ALWAYS);
+
+        panel.getChildren().addAll(formTitle, formBox, listTitle, categoryTable);
+
+        reloadCategories(categoryTable, statusLabel);
+
+        return panel;
+    }
+
+    /**
+     * Finds the Category TableView within the categories panel.
+     *
+     * @param panel the VBox containing the categories panel
+     * @return the found TableView, or null if not found
+     */
+    private TableView<CategoryDto> findCategoryTable(VBox panel) {
+        for (var node : panel.getChildren()) {
+            if (node instanceof TableView) {
+                @SuppressWarnings("unchecked")
+                TableView<CategoryDto> table = (TableView<CategoryDto>) node;
+                return table;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Reloads the category list from the server and updates the table.
+     *
+     * @param table        the TableView to populate
+     * @param statusLabel  the label for displaying status messages
+     */
+    private void reloadCategories(TableView<CategoryDto> table, Label statusLabel) {
+        UiTasks.runAsync(statusLabel, apiClient::getCategories,
+                list -> table.setItems(FXCollections.observableArrayList(list)),
+                ex -> statusLabel.setText(apiClient.extractErrorMessage(ex)));
+    }
+
+    /**
+     * Builds the pending listings table for admin review.
+     *
+     * @param statusLabel the label for displaying status messages
+     * @return a TableView configured for pending listings
      */
     private TableView<ListingDto> buildPendingTable(Label statusLabel) {
         TableView<ListingDto> table = new TableView<>();
+
         TableColumn<ListingDto, String> titleCol = new TableColumn<>("Title");
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
+
         TableColumn<ListingDto, String> sellerCol = new TableColumn<>("Seller");
         sellerCol.setCellValueFactory(new PropertyValueFactory<>("sellerUsername"));
+
         TableColumn<ListingDto, Void> actionCol = new TableColumn<>("Review");
-        actionCol.setPrefWidth(230);
         actionCol.setCellFactory(col -> new TableCell<>() {
             private final Button approveBtn = new Button("Approve");
             private final Button rejectBtn = new Button("Reject");
@@ -116,8 +242,11 @@ public class AdminPanelView {
                 approveBtn.getStyleClass().add("primary-button");
                 rejectBtn.getStyleClass().add("secondary-button");
                 deleteBtn.getStyleClass().add("danger-button");
-                approveBtn.setOnAction(e -> review(getTableView().getItems().get(getIndex()), ReviewDecision.APPROVED, table, statusLabel));
-                rejectBtn.setOnAction(e -> review(getTableView().getItems().get(getIndex()), ReviewDecision.REJECTED, table, statusLabel));
+
+                approveBtn.setOnAction(e -> review(getTableView().getItems().get(getIndex()),
+                        ReviewDecision.APPROVED, table, statusLabel));
+                rejectBtn.setOnAction(e -> review(getTableView().getItems().get(getIndex()),
+                        ReviewDecision.REJECTED, table, statusLabel));
                 deleteBtn.setOnAction(e -> UiTasks.runAsync(statusLabel, () -> {
                             apiClient.deleteListing(getTableView().getItems().get(getIndex()).getId());
                             return apiClient.getPendingListings();
@@ -132,42 +261,25 @@ public class AdminPanelView {
             }
         });
 
-        TableColumn<ListingDto, Void> viewCol = new TableColumn<>("Ad Details");
-        viewCol.setPrefWidth(70);
-        viewCol.setCellFactory(col -> new TableCell<>(){
-            private final Button viewBtn = new Button("View");
-            {
-                viewBtn.getStyleClass().add("secondary-button");
-                viewBtn.setOnAction(e -> {
-                    ListingDto item = getTableView().getItems().get(getIndex());
-                    navigator.showListingDetail(item.getId());
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : viewBtn);
-            }
-        });
-
-        table.getColumns().addAll(titleCol, sellerCol, actionCol, viewCol);
+        table.getColumns().addAll(titleCol, sellerCol, actionCol);
         return table;
     }
 
     /**
-     * Performs a review action on a pending listing (approve or reject).
-     * After the review, the pending list is refreshed.
+     * Reviews a listing with the given decision.
      *
      * @param listing      the listing to review
-     * @param decision     the review decision (approved or rejected)
-     * @param table        the table containing the pending listings
-     * @param statusLabel  the label for status messages
+     * @param decision     the review decision (APPROVED or REJECTED)
+     * @param table        the TableView to update after review
+     * @param statusLabel  the label for displaying status messages
      */
-    private void review(ListingDto listing, ReviewDecision decision, TableView<ListingDto> table, Label statusLabel) {
+    private void review(ListingDto listing, ReviewDecision decision,
+                        TableView<ListingDto> table, Label statusLabel) {
         AdminReviewRequest request = new AdminReviewRequest();
         request.setDecision(decision);
-        request.setComment(decision == ReviewDecision.APPROVED ? "Approved by admin" : "Rejected by admin");
+        request.setComment(decision == ReviewDecision.APPROVED
+                ? "Approved by admin" : "Rejected by admin");
+
         UiTasks.runAsync(statusLabel, () -> {
                     apiClient.reviewListing(listing.getId(), request);
                     return apiClient.getPendingListings();
@@ -176,28 +288,33 @@ public class AdminPanelView {
     }
 
     /**
-     * Builds and configures the table that displays all registered users.
-     * Each row includes a button to block or unblock the user.
+     * Builds the users table for admin user management.
      *
-     * @param statusLabel the label used to display operation status messages
-     * @return the configured TableView for users
+     * @param statusLabel the label for displaying status messages
+     * @return a TableView configured for user management
      */
     private TableView<UserDto> buildUsersTable(Label statusLabel) {
         TableView<UserDto> table = new TableView<>();
+
         TableColumn<UserDto, String> usernameCol = new TableColumn<>("Username");
         usernameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
+
         TableColumn<UserDto, String> roleCol = new TableColumn<>("Role");
         roleCol.setCellValueFactory(new PropertyValueFactory<>("role"));
+
         TableColumn<UserDto, Boolean> blockedCol = new TableColumn<>("Blocked");
         blockedCol.setCellValueFactory(new PropertyValueFactory<>("blocked"));
+
         TableColumn<UserDto, Void> actionCol = new TableColumn<>("Action");
         actionCol.setCellFactory(col -> new TableCell<>() {
-            private final Button toggleBtn = new Button("Block");
+            private final Button toggleBtn = new Button("Toggle Block");
+
             {
                 toggleBtn.getStyleClass().add("secondary-button");
                 toggleBtn.setOnAction(e -> {
                     UserDto user = getTableView().getItems().get(getIndex());
-                    UiTasks.runAsync(statusLabel, () -> apiClient.blockUser(user.getId(), !user.isBlocked()),
+                    UiTasks.runAsync(statusLabel,
+                            () -> apiClient.blockUser(user.getId(), !user.isBlocked()),
                             updated -> reloadUsers(table, statusLabel),
                             ex -> statusLabel.setText(apiClient.extractErrorMessage(ex)));
                 });
@@ -209,38 +326,16 @@ public class AdminPanelView {
                 setGraphic(empty ? null : toggleBtn);
             }
         });
+
         table.getColumns().addAll(usernameCol, roleCol, blockedCol, actionCol);
         return table;
     }
 
     /**
-     * Builds the category management panel with input fields for name and description,
-     * and a button to add a new category.
+     * Reloads the pending listings from the server.
      *
-     * @param statusLabel the label used to display operation status messages
-     * @return a VBox containing the category management controls
-     */
-    private VBox buildCategoriesPanel(Label statusLabel) {
-        TextField nameField = new TextField();
-        nameField.setPromptText("Category name");
-        TextField descField = new TextField();
-        descField.setPromptText("Description");
-        Button addBtn = new Button("Add Category");
-        addBtn.getStyleClass().add("primary-button");
-        addBtn.setOnAction(e -> UiTasks.runAsync(statusLabel, () -> apiClient.createCategory(nameField.getText().trim(), descField.getText().trim()),
-                created -> {
-                    nameField.clear();
-                    descField.clear();
-                    UiTasks.showInfo("Success", "Category created");
-                }, ex -> statusLabel.setText(apiClient.extractErrorMessage(ex))));
-        return new VBox(10, new Label("Manage Categories"), nameField, descField, addBtn);
-    }
-
-    /**
-     * Reloads the pending listings table by fetching fresh data from the API.
-     *
-     * @param table        the pending listings table to update
-     * @param statusLabel  the label for status messages
+     * @param table        the TableView to populate
+     * @param statusLabel  the label for displaying status messages
      */
     private void reloadPending(TableView<ListingDto> table, Label statusLabel) {
         UiTasks.runAsync(statusLabel, apiClient::getPendingListings,
@@ -249,10 +344,10 @@ public class AdminPanelView {
     }
 
     /**
-     * Reloads the users table by fetching fresh user data from the API.
+     * Reloads the user list from the server.
      *
-     * @param table        the users table to update
-     * @param statusLabel  the label for status messages
+     * @param table        the TableView to populate
+     * @param statusLabel  the label for displaying status messages
      */
     private void reloadUsers(TableView<UserDto> table, Label statusLabel) {
         UiTasks.runAsync(statusLabel, apiClient::getUsers,
