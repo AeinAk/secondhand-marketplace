@@ -11,6 +11,29 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+/**
+ * Initializes the database with seed data on application startup.
+ * <p>
+ * This component implements {@link CommandLineRunner} to automatically populate
+ * the database with default users, categories, and cities when the application
+ * starts for the first time. It ensures that essential reference data and test
+ * accounts are available for immediate use without manual setup.
+ * </p>
+ * <p>
+ * The seed data includes:
+ * <ul>
+ *   <li>Administrator account (admin/admin123)</li>
+ *   <li>Regular user accounts (alice/user123, bob/user123)</li>
+ *   <li>Five default categories (Electronics, Furniture, Clothing, Books, Sports)</li>
+ *   <li>Five major Iranian cities (Tehran, Isfahan, Shiraz, Tabriz, Mashhad)</li>
+ * </ul>
+ * All operations are idempotent – data is only inserted if it does not already exist.
+ * </p>
+ *
+ * @author Atbin Jafarzadeh Afshari
+ * @version 1.0
+ * @since 1.0
+ */
 @Component
 public class DataInitializer implements CommandLineRunner {
 
@@ -19,6 +42,14 @@ public class DataInitializer implements CommandLineRunner {
     private final CityRepository cityRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Constructs a DataInitializer with the required repositories and encoder.
+     *
+     * @param userRepository     the repository for user data access
+     * @param categoryRepository the repository for category data access
+     * @param cityRepository     the repository for city data access
+     * @param passwordEncoder    the encoder for hashing passwords
+     */
     public DataInitializer(UserRepository userRepository,
                            CategoryRepository categoryRepository,
                            CityRepository cityRepository,
@@ -29,6 +60,15 @@ public class DataInitializer implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Executes the data seeding process when the application starts.
+     * <p>
+     * This method is automatically invoked by Spring Boot after the application
+     * context is fully initialized. It sequentially seeds users, categories, and cities.
+     * </p>
+     *
+     * @param args command-line arguments (not used)
+     */
     @Override
     public void run(String... args) {
         seedUsers();
@@ -36,6 +76,18 @@ public class DataInitializer implements CommandLineRunner {
         seedCities();
     }
 
+    /**
+     * Seeds the database with default users.
+     * <p>
+     * Creates three users if they do not already exist:
+     * <ul>
+     *   <li>An administrator with username {@code admin} and password {@code admin123}</li>
+     *   <li>A regular user with username {@code alice} and password {@code user123}</li>
+     *   <li>A regular user with username {@code bob} and password {@code user123}</li>
+     * </ul>
+     * All passwords are encoded using the configured {@link PasswordEncoder}.
+     * </p>
+     */
     private void seedUsers() {
         if (userRepository.findByUsername("admin").isEmpty()) {
             User admin = new User();
@@ -66,6 +118,16 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
+    /**
+     * Seeds the database with default categories.
+     * <p>
+     * Creates five default categories if they do not already exist:
+     * Electronics, Furniture, Clothing, Books, and Sports.
+     * Each category is created with a descriptive text.
+     * </p>
+     *
+     * @see #createCategoryIfMissing(String, String)
+     */
     private void seedCategories() {
         createCategoryIfMissing("Electronics", "Phones, laptops, and gadgets");
         createCategoryIfMissing("Furniture", "Home and office furniture");
@@ -74,6 +136,16 @@ public class DataInitializer implements CommandLineRunner {
         createCategoryIfMissing("Sports", "Sports equipment and gear");
     }
 
+    /**
+     * Seeds the database with default cities.
+     * <p>
+     * Creates five major Iranian cities if they do not already exist:
+     * Tehran, Isfahan, Shiraz, Tabriz, and Mashhad.
+     * Each city is associated with its respective province.
+     * </p>
+     *
+     * @see #createCityIfMissing(String, String)
+     */
     private void seedCities() {
         createCityIfMissing("Tehran", "Tehran");
         createCityIfMissing("Isfahan", "Isfahan");
@@ -82,6 +154,16 @@ public class DataInitializer implements CommandLineRunner {
         createCityIfMissing("Mashhad", "Razavi Khorasan");
     }
 
+    /**
+     * Creates a new category if it does not already exist.
+     * <p>
+     * Checks the database for a category with the given name (case-insensitive).
+     * If none exists, a new category is created with the provided name and description.
+     * </p>
+     *
+     * @param name        the category name (must be unique)
+     * @param description the category description
+     */
     private void createCategoryIfMissing(String name, String description) {
         if (categoryRepository.findByNameIgnoreCase(name).isEmpty()) {
             Category category = new Category();
@@ -91,6 +173,16 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
+    /**
+     * Creates a new city if it does not already exist.
+     * <p>
+     * Checks the database for a city with the given name (case-insensitive).
+     * If none exists, a new city is created with the provided name and province.
+     * </p>
+     *
+     * @param name     the city name (must be unique)
+     * @param province the province or state the city belongs to
+     */
     private void createCityIfMissing(String name, String province) {
         if (cityRepository.findByNameIgnoreCase(name).isEmpty()) {
             City city = new City();
