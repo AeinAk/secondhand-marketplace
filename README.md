@@ -147,18 +147,6 @@ These accounts are automatically created by the `DataInitializer` on the first r
 
 ---
 
-## API Documentation
-
-All REST endpoints are documented in the [`API.md`](API.md) file located in the project root.  
-The API documentation includes:
-
-- Endpoint paths and HTTP methods
-- Request/response examples
-- Authentication requirements
-- Status codes
-
----
-
 ## Database
 
 - **SQLite** is used as the embedded database.
